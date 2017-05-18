@@ -1,0 +1,21 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: technekes/circleci:alpine
+
+    working_directory: /tmp/app
+
+    steps:
+      - checkout
+      - setup_remote_docker
+
+      - run:
+          name: Build the image
+          command: |
+                  docker build -t example:$CIRCLE_BRANCH .
+
+      - run:
+          name: Run tests
+          command: |
+                  docker run -it example:$CIRCLE_BRANCH 
