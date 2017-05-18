@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: technekes/circleci:alpine
+      - image: technekes/circleci
 
     working_directory: /tmp/app
 
