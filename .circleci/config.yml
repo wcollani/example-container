@@ -14,13 +14,23 @@ jobs:
           name: Build the image
           command: |
                   docker build -t $CIRCLE_PROJECT_REPONAME:$CIRCLE_BRANCH .
-
+                  
+                  #Get version label from container
                   CONTAINER_VERSION=$(docker inspect -f {{.Config.Labels.version}} $CIRCLE_PROJECT_REPONAME:$CIRCLE_BRANCH)
                   
                   echo $CONTAINER_VERSION
 
                   #Check if version already has a release
                   curl https://api.github.com/repos/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/releases/tags/v0.0.1 #| grep "Not Found"
+                
+                  #On master, verify version label matches commit msg version
+                  if [ "${CIRCLE_BRANCH}" != "master" ];
+                    then 
+                        COMMIT_VERSION=$(git log -1 --pretty=%B | grep "\[v.*\]" | cut -d "[" -f2 | cut -d "]" -f1)
+                        echo $COMMIT_VERSION
+                  fi
+
+                
 
       - run:
           name: Run tests
