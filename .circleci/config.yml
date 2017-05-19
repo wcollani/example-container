@@ -21,16 +21,20 @@ jobs:
                   echo $CONTAINER_VERSION
 
                   #Check if version already has a release
-                  curl https://api.github.com/repos/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/releases/tags/v0.0.1 #| grep "Not Found"
+                  curl https://api.github.com/repos/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/releases/tags/$CONTAINER_VERSION | grep "Not Found"
                 
-                  #On master, verify version label matches commit msg version
+                  #On master, verify container version label matches commit msg version
                   if [ "${CIRCLE_BRANCH}" != "master" ];
                     then 
                         COMMIT_VERSION=$(git log -1 --pretty=%B | grep "\[v.*\]" | cut -d "[" -f2 | cut -d "]" -f1)
                         echo $COMMIT_VERSION
-                  fi
 
-                
+                        if [ "${CONTAINER_VERSION}" == "{COMMIT_VERSION}" ];
+                        then
+                            echo "Versions don't match"
+                            exit 1
+                        fi 
+                  fi
 
       - run:
           name: Run tests
