@@ -18,4 +18,34 @@ jobs:
       - run:
           name: Run tests
           command: |
-                  docker run -it example:$CIRCLE_BRANCH 
+                  docker run -it example:$CIRCLE_BRANCH | tee output
+
+      - run: 
+          name: Verify tests output
+          command: |
+                  grep "day" output
+
+      # Deploy development
+      - deploy:
+          name: Push branch tagged image to development repo
+          command: |
+            if [ "${CIRCLE_BRANCH}" != "master" ];
+              then echo "Deploy dev";
+            fi
+
+      # Deploy production, tag on master
+      - deploy:
+          name: Push tagged release to production repo
+          command: |
+            if [ "${CIRCLE_BRANCH}" == "master" ] && [ -z "${CIRCLE_TAG}" ];
+              then echo "Tag on master";
+            fi
+
+      # Deploy development beta, no tag on master
+      - deploy:
+          name: Push beta release to development repo
+          command: |
+            if [ "${CIRCLE_BRANCH}" == "master" ];
+              then echo "No tag on master";
+            fi
+
