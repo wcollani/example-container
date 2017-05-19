@@ -18,10 +18,9 @@ jobs:
                   CONTAINER_VERSION=$(docker inspect -f {{.Config.Labels.version}} $CIRCLE_PROJECT_REPONAME:$CIRCLE_BRANCH)
                   
                   echo $CONTAINER_VERSION
-                  #Check if version already exists 
-                  echo $CIRCLE_REPOSITORY_URL
-                  
 
+                  #Check if version already has a release
+                  curl https://api.github.com/repos/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/releases/tags/v0.0.1 #| grep "Not Found"
 
       - run:
           name: Run tests
