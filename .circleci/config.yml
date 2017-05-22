@@ -108,7 +108,7 @@ jobs:
                 tar --exclude=source.tar.gz --exclude ghr -czvf source.tar.gz *
 
                 # Upload source to Gitbub release
-                ./ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME -recreate -prerelease $CONTAINER_TAG source.tar.gz
+                ./ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME -b "" -recreate -prerelease $CONTAINER_TAG source.tar.gz
 
             fi
 
