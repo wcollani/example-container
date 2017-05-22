@@ -54,7 +54,7 @@ jobs:
           command: |
             grep "day" output
 
-      #branch commit & develop PRs
+      #branch commit
       - deploy:
           name: Push branch tagged image to development repo
           command: |
@@ -73,7 +73,7 @@ jobs:
  
             fi
 
-      #develop commit & master PR
+      #develop commit
       - deploy:
           name: Push alpha release to development repo
           command: |
