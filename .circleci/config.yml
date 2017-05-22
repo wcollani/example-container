@@ -100,7 +100,6 @@ jobs:
                 #Create github pre-release
                 # Instal `ghr`
                 # TODO: Add ghr to primary container
-                #apt-get update -q && apt-get install -qy unzip
                 wget https://github.com/tcnksm/ghr/releases/download/v0.5.3/ghr_v0.5.3_linux_amd64.zip
                 unzip ghr_v0.5.3_linux_amd64.zip
 
@@ -108,7 +107,7 @@ jobs:
                 tar --exclude=source.tar.gz --exclude ghr -czvf source.tar.gz *
 
                 # Upload source to Gitbub release
-                ./ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME -b "" -recreate -prerelease $CONTAINER_TAG source.tar.gz
+                ./ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME -recreate -prerelease $CONTAINER_TAG source.tar.gz
 
             fi
 
@@ -140,7 +139,6 @@ jobs:
                 #Create github pre-release
                 # Instal `ghr`
                 # TODO: Add ghr to primary container
-                #apt-get update -q && apt-get install -qy unzip
                 wget https://github.com/tcnksm/ghr/releases/download/v0.5.3/ghr_v0.5.3_linux_amd64.zip
                 unzip ghr_v0.5.3_linux_amd64.zip
 
@@ -180,7 +178,6 @@ jobs:
                 #Create github pre-release
                 # Instal `ghr`
                 # TODO: Add ghr to primary container
-                #apt-get update -q && apt-get install -qy unzip
                 wget https://github.com/tcnksm/ghr/releases/download/v0.5.3/ghr_v0.5.3_linux_amd64.zip
                 unzip ghr_v0.5.3_linux_amd64.zip
 
