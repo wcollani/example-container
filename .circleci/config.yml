@@ -144,7 +144,7 @@ jobs:
 
                 #Tag image with test repo & deployed version
                 CONTAINER_TAG="${CONTAINER_VERSION}"
-                docker tag $CIRCLE_PROJECT_REPONAME:$CIRCLE_BRANCH $QUAY_TEST_REPO:$CONTAINER_TAG
+                docker tag $CIRCLE_PROJECT_REPONAME:$CIRCLE_BRANCH $QUAY_PROD_REPO:$CONTAINER_TAG
 
                 #Login to quay.io
                 docker login -u=$QUAY_USERNAME -p=$QUAY_PASSWORD quay.io
