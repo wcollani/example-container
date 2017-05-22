@@ -27,7 +27,7 @@ jobs:
             #Check if version already has a release, fails if found
             curl -s https://api.github.com/repos/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/releases/tags/$CONTAINER_VERSION | grep "Not Found"
             
-            #On master, verify container version label matches commit msg version
+            #On master if msg contains version, verify container version label matches commit msg version
             #TODO: Workaround until circle v2 supports tag build trigger
             #https://discuss.circleci.com/t/build-on-tag/9864/16
             if [ "${CIRCLE_BRANCH}" == "master" ];
@@ -35,7 +35,7 @@ jobs:
                 COMMIT_VERSION=$(git log -1 --pretty=%B | grep "\[v.*\]" | cut -d "[" -f2 | cut -d "]" -f1) || true
                 echo $COMMIT_VERSION
 
-                if [ "${CONTAINER_VERSION}" != "${COMMIT_VERSION}" ];
+                if [ "${CONTAINER_VERSION}" != "${COMMIT_VERSION}" ] && [ -n "${COMMIT_VERSION}" ] ;
                 then
                     echo "Versions don't match"
                     exit 1
