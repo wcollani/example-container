@@ -75,7 +75,7 @@ jobs:
 
       #develop commit & master PR
       - deploy:
-          name: Push alpha release to production repo
+          name: Push alpha release to development repo
           command: |
 
             #Recover env_vars
