@@ -24,7 +24,7 @@ jobs:
             echo "export CONTAINER_VERSION=${CONTAINER_VERSION}" >> env_vars
 
             #Check if version already has a release, fails if found
-            curl https://api.github.com/repos/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/releases/tags/$CONTAINER_VERSION | grep "Not Found"
+            curl -s https://api.github.com/repos/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/releases/tags/$CONTAINER_VERSION #| grep "Not Found"
             
             #On master, verify container version label matches commit msg version
             #TODO: Workaround until circle v2 supports tag build trigger
