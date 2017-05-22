@@ -136,7 +136,6 @@ jobs:
                 docker push $QUAY_TEST_REPO:$CONTAINER_TAG
 
                 #Create github pre-release
-                #Create github pre-release
                 # Instal `ghr`
                 # TODO: Add ghr to primary container
                 wget https://github.com/tcnksm/ghr/releases/download/v0.5.3/ghr_v0.5.3_linux_amd64.zip
@@ -175,7 +174,6 @@ jobs:
                 docker push $QUAY_PROD_REPO:$CONTAINER_TAG
 
                 #Create github release
-                #Create github pre-release
                 # Instal `ghr`
                 # TODO: Add ghr to primary container
                 wget https://github.com/tcnksm/ghr/releases/download/v0.5.3/ghr_v0.5.3_linux_amd64.zip
