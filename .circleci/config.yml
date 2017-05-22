@@ -113,6 +113,18 @@ jobs:
             if [ "${CIRCLE_BRANCH}" == "master" ] && [ -z "${COMMIT_VERSION}" ];
             then 
                 echo "Push beta image to develop repository & Create github pre-release";
+
+                #Tag image with test repo & alpha build ver
+                CONTAINER_TAG="${CONTAINER_VERSION}-beta.${CIRCLE_BUILD_NUM}"
+                docker tag $CIRCLE_PROJECT_REPONAME:$CIRCLE_BRANCH $QUAY_TEST_REPO:$CONTAINER_TAG
+
+                #Login to quay.io
+                docker login -u=$QUAY_USERNAME -p=$QUAY_PASSWORD quay.io
+
+                #Push to quay.io develop repo
+                docker push $QUAY_TEST_REPO:$CONTAINER_TAG
+
+                #Create github pre-release
             fi
 
       #master with version in commit, ex: "Push release [vX.Y.Z]"
@@ -128,5 +140,17 @@ jobs:
             if [ "${CIRCLE_BRANCH}" == "master" ] && [ -n "${COMMIT_VERSION}" ];
             then 
                 echo "Push released version to develop repository & Create github release";
+
+                #Tag image with test repo & alpha build ver
+                CONTAINER_TAG="${CONTAINER_VERSION}"
+                docker tag $CIRCLE_PROJECT_REPONAME:$CIRCLE_BRANCH $QUAY_TEST_REPO:$CONTAINER_TAG
+
+                #Login to quay.io
+                docker login -u=$QUAY_USERNAME -p=$QUAY_PASSWORD quay.io
+
+                #Push to quay.io develop repo
+                docker push $QUAY_TEST_REPO:$CONTAINER_TAG
+
+                #Create github pre-release
             fi
 
