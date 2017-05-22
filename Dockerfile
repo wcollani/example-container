@@ -1,6 +1,6 @@
 FROM ubuntu:16.04
 LABEL maintainer="wcollani@gmail.com" \
-      version="v0.0.2"
+      version="v0.0.3"
 
 COPY ./example.sh /example.sh
 RUN chmod +x /example.sh
