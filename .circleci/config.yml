@@ -20,6 +20,9 @@ jobs:
             
             echo $CONTAINER_VERSION
 
+            #Save container version
+            echo "export CONTAINER_VERSION=${CONTAINER_VERSION}" >> env_vars
+
             #Check if version already has a release, fails if found
             curl https://api.github.com/repos/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/releases/tags/$CONTAINER_VERSION | grep "Not Found"
             
@@ -36,6 +39,9 @@ jobs:
                     echo "Versions don't match"
                     exit 1
                 fi 
+
+                #Save commit version
+                echo "export COMMIT_VERSION=${COMMIT_VERSION}" >> env_vars
             fi
 
       - run:
@@ -71,7 +77,11 @@ jobs:
       - deploy:
           name: Push alpha release to production repo
           command: |
+
+            #Recover env_vars
+            source env_vars
             echo "${CONTAINER_VERSION}"
+
             if [ "${CIRCLE_BRANCH}" == "develop" ] && [ -n "${CONTAINER_VERSION}" ];
             then 
                 echo "Push alpha image to develop repository & Create github pre-release";
@@ -94,7 +104,12 @@ jobs:
       - deploy:
           name: Push beta release to development repo
           command: |
+            
+            #Recover env_vars
+            source env_vars
+            echo "${CONTAINER_VERSION}"
             echo "${COMMIT_VERSION}"
+
             if [ "${CIRCLE_BRANCH}" == "master" ] && [ -z "${COMMIT_VERSION}" ];
             then 
                 echo "Push beta image to develop repository & Create github pre-release";
@@ -104,7 +119,12 @@ jobs:
       - deploy:
           name: Push release to production repo
           command: |
-            echo "${COMMIT_VERSION}" 
+            
+            #Recover env_vars
+            source env_vars
+            echo "${CONTAINER_VERSION}"
+            echo "${COMMIT_VERSION}"
+
             if [ "${CIRCLE_BRANCH}" == "master" ] && [ -n "${COMMIT_VERSION}" ];
             then 
                 echo "Push released version to develop repository & Create github release";
