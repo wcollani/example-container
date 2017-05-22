@@ -56,6 +56,13 @@ jobs:
             then 
                 echo "Push image to develop repository";
                 docker tag $CIRCLE_PROJECT_REPONAME:$CIRCLE_BRANCH quay.io/william_collani/example-test:$CIRCLE_BRANCH
+
+                #Login to quay.io
+                docker login -u=$QUAY_USERNAME -p=$QUAY_PASSWORD quay.io
+                
+                #Push to quay.io develop repo
+                docker push quay.io/william_collani/example-test:$CIRCLE_BRANCH
+ 
             fi
 
       # Deploy production, tag on master
