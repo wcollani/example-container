@@ -16,7 +16,7 @@ jobs:
             docker build -t $CIRCLE_PROJECT_REPONAME:$CIRCLE_BRANCH .
             
             #Get version label from container
-            CONTAINER_VERSION=$(docker inspect -f {{.Config.Labels.version}} $CIRCLE_PROJECT_REPONAME:$CIRCLE_BRANCH)
+            export CONTAINER_VERSION=$(docker inspect -f {{.Config.Labels.version}} $CIRCLE_PROJECT_REPONAME:$CIRCLE_BRANCH)
             
             echo $CONTAINER_VERSION
 
