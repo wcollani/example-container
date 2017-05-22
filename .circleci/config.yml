@@ -22,7 +22,8 @@ jobs:
             echo $CONTAINER_VERSION
 
             #Save container version
-            echo "export CONTAINER_VERSION=${CONTAINER_VERSION}" >> env_vars
+            mkdir temp
+            echo "export CONTAINER_VERSION=${CONTAINER_VERSION}" >> temp/env_vars
 
             #Check if version already has a release, fails if found
             curl -s https://api.github.com/repos/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/releases/tags/$CONTAINER_VERSION | grep "Not Found"
@@ -42,18 +43,18 @@ jobs:
                 fi 
 
                 #Save commit version
-                echo "export COMMIT_VERSION=${COMMIT_VERSION}" >> env_vars
+                echo "export COMMIT_VERSION=${COMMIT_VERSION}" >> temp/env_vars
             fi
 
       - run:
           name: Run tests
           command: |
-            docker run -it $CIRCLE_PROJECT_REPONAME:$CIRCLE_BRANCH | tee output
+            docker run -it $CIRCLE_PROJECT_REPONAME:$CIRCLE_BRANCH | tee temp/output
 
       - run: 
           name: Verify tests output
           command: |
-            grep "day" output
+            #verification 
 
       #branch commit
       - deploy:
@@ -80,7 +81,7 @@ jobs:
           command: |
 
             #Recover env_vars
-            source env_vars
+            source temp/env_vars
             echo "${CONTAINER_VERSION}"
 
             if [ "${CIRCLE_BRANCH}" == "develop" ] && [ -n "${CONTAINER_VERSION}" ];
@@ -104,7 +105,7 @@ jobs:
                 unzip ghr_v0.5.3_linux_amd64.zip
 
                 #Create source archive
-                tar --exclude=ghr_v0.5.3_linux_amd64.zip --exclude=source.tar.gz --exclude ghr -czvf source.tar.gz *
+                tar --exclude=ghr_v0.5.3_linux_amd64.zip --exclude=source.tar.gz --exclude ghr --exclude temp/* -czvf source.tar.gz *
 
                 # Upload source to Gitbub release
                 ./ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME -c $CIRCLE_SHA1 -replace -prerelease $CONTAINER_TAG source.tar.gz
@@ -117,7 +118,7 @@ jobs:
           command: |
             
             #Recover env_vars
-            source env_vars
+            source temp/env_vars
             echo "${CONTAINER_VERSION}"
             echo "${COMMIT_VERSION}"
 
@@ -142,7 +143,7 @@ jobs:
                 unzip ghr_v0.5.3_linux_amd64.zip
 
                 #Create source archive
-                tar --exclude=ghr_v0.5.3_linux_amd64.zip --exclude=source.tar.gz --exclude ghr -czvf source.tar.gz *
+                tar --exclude=ghr_v0.5.3_linux_amd64.zip --exclude=source.tar.gz --exclude ghr --exclude temp/* -czvf source.tar.gz *
 
                 # Upload source to Gitbub release
                 ./ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME -c $CIRCLE_SHA1 -replace -prerelease $CONTAINER_TAG source.tar.gz
@@ -155,7 +156,7 @@ jobs:
           command: |
             
             #Recover env_vars
-            source env_vars
+            source temp/env_vars
             echo "${CONTAINER_VERSION}"
             echo "${COMMIT_VERSION}"
 
@@ -180,7 +181,7 @@ jobs:
                 unzip ghr_v0.5.3_linux_amd64.zip
 
                 #Create source archive
-                tar --exclude=ghr_v0.5.3_linux_amd64.zip --exclude=source.tar.gz --exclude ghr -czvf source.tar.gz *
+                tar --exclude=ghr_v0.5.3_linux_amd64.zip --exclude=source.tar.gz --exclude ghr --exclude temp/* -czvf source.tar.gz *
 
                 # Upload source to Gitbub release
                 ./ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME -c $CIRCLE_SHA1 -replace $CONTAINER_TAG source.tar.gz
