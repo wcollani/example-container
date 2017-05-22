@@ -17,7 +17,7 @@ jobs:
             docker build -t $CIRCLE_PROJECT_REPONAME:$CIRCLE_BRANCH .
             
             #Get version label from container
-            export CONTAINER_VERSION=$(docker inspect -f {{.Config.Labels.version}} $CIRCLE_PROJECT_REPONAME:$CIRCLE_BRANCH)
+            CONTAINER_VERSION=$(docker inspect -f {{.Config.Labels.version}} $CIRCLE_PROJECT_REPONAME:$CIRCLE_BRANCH)
             
             echo $CONTAINER_VERSION
 
@@ -32,7 +32,7 @@ jobs:
             #https://discuss.circleci.com/t/build-on-tag/9864/16
             if [ "${CIRCLE_BRANCH}" == "master" ];
             then 
-                COMMIT_VERSION="$(git log -1 --pretty=%B | grep "\[v.*\]" | cut -d "[" -f2 | cut -d "]" -f1)"
+                COMMIT_VERSION=$(git log -1 --pretty=%B | grep "\[v.*\]" | cut -d "[" -f2 | cut -d "]" -f1) || true
                 echo $COMMIT_VERSION
 
                 if [ "${CONTAINER_VERSION}" != "${COMMIT_VERSION}" ];
