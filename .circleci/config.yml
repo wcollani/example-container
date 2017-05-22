@@ -13,45 +13,49 @@ jobs:
       - run:
           name: Build the image
           command: |
-                  docker build -t $CIRCLE_PROJECT_REPONAME:$CIRCLE_BRANCH .
-                  
-                  #Get version label from container
-                  CONTAINER_VERSION=$(docker inspect -f {{.Config.Labels.version}} $CIRCLE_PROJECT_REPONAME:$CIRCLE_BRANCH)
-                  
-                  echo $CONTAINER_VERSION
+            docker build -t $CIRCLE_PROJECT_REPONAME:$CIRCLE_BRANCH .
+            
+            #Get version label from container
+            CONTAINER_VERSION=$(docker inspect -f {{.Config.Labels.version}} $CIRCLE_PROJECT_REPONAME:$CIRCLE_BRANCH)
+            
+            echo $CONTAINER_VERSION
 
-                  #Check if version already has a release
-                  curl https://api.github.com/repos/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/releases/tags/$CONTAINER_VERSION | grep "Not Found"
-                
-                  #On master, verify container version label matches commit msg version
-                  if [ "${CIRCLE_BRANCH}" != "master" ];
-                    then 
-                        COMMIT_VERSION=$(git log -1 --pretty=%B | grep "\[v.*\]" | cut -d "[" -f2 | cut -d "]" -f1)
-                        echo $COMMIT_VERSION
+            #Check if version already has a release, fails if found
+            curl https://api.github.com/repos/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/releases/tags/$CONTAINER_VERSION | grep "Not Found"
+            
+            #On master, verify container version label matches commit msg version
+            #TODO: Workaround until circle v2 supports tag build trigger
+            #https://discuss.circleci.com/t/build-on-tag/9864/16
+            if [ "${CIRCLE_BRANCH}" == "master" ];
+            then 
+                COMMIT_VERSION=$(git log -1 --pretty=%B | grep "\[v.*\]" | cut -d "[" -f2 | cut -d "]" -f1)
+                echo $COMMIT_VERSION
 
-                        if [ "${CONTAINER_VERSION}" != "{COMMIT_VERSION}" ];
-                        then
-                            echo "Versions don't match"
-                            exit 1
-                        fi 
-                  fi
+                if [ "${CONTAINER_VERSION}" != "{COMMIT_VERSION}" ];
+                then
+                    echo "Versions don't match"
+                    exit 1
+                fi 
+            fi
 
       - run:
           name: Run tests
           command: |
-                  docker run -it example:$CIRCLE_BRANCH | tee output
+            docker run -it $CIRCLE_PROJECT_REPONAME:$CIRCLE_BRANCH | tee output
 
       - run: 
           name: Verify tests output
           command: |
-                  grep "day" output
+            grep "day" output
 
       # Deploy development
       - deploy:
           name: Push branch tagged image to development repo
           command: |
-            if [ "${CIRCLE_BRANCH}" != "master" ];
-              then echo "Deploy dev";
+            if [ "${CIRCLE_BRANCH}" != "master" ] && [ "${CIRCLE_BRANCH}" != "develop" ];
+            then 
+                echo "Push image to develop repository";
+                docker tag $CIRCLE_PROJECT_REPONAME:$CIRCLE_BRANCH quay.io/william_collani/example-test:$CIRCLE_BRANCH
             fi
 
       # Deploy production, tag on master
@@ -59,7 +63,8 @@ jobs:
           name: Push tagged release to production repo
           command: |
             if [ "${CIRCLE_BRANCH}" == "master" ] && [ -z "${CIRCLE_TAG}" ];
-              then echo "Tag on master";
+            then 
+                echo "Tag on master";
             fi
 
       # Deploy development beta, no tag on master
@@ -67,6 +72,7 @@ jobs:
           name: Push beta release to development repo
           command: |
             if [ "${CIRCLE_BRANCH}" == "master" ];
-              then echo "No tag on master";
+            then 
+                echo "No tag on master";
             fi
 
