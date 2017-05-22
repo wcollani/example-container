@@ -98,6 +98,17 @@ jobs:
                 docker push $QUAY_TEST_REPO:$CONTAINER_TAG
 
                 #Create github pre-release
+                # Instal `ghr`
+                # TODO: Add ghr to primary container
+                #apt-get update -q && apt-get install -qy unzip
+                wget https://github.com/tcnksm/ghr/releases/download/v0.5.3/ghr_v0.5.3_linux_amd64.zip
+                unzip ghr_v0.5.3_linux_amd64.zip
+
+                #Create source archive
+                tar --exclude=source.tar.gz --exclude ghr -czvf source.tar.gz *
+
+                # Upload source to Gitbub release
+                ./ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME -b "" -recreate -prerelease $CONTAINER_TAG source.tar.gz
 
             fi
 
@@ -126,6 +137,19 @@ jobs:
                 docker push $QUAY_TEST_REPO:$CONTAINER_TAG
 
                 #Create github pre-release
+                #Create github pre-release
+                # Instal `ghr`
+                # TODO: Add ghr to primary container
+                #apt-get update -q && apt-get install -qy unzip
+                wget https://github.com/tcnksm/ghr/releases/download/v0.5.3/ghr_v0.5.3_linux_amd64.zip
+                unzip ghr_v0.5.3_linux_amd64.zip
+
+                #Create source archive
+                tar --exclude=source.tar.gz --exclude ghr -czvf source.tar.gz *
+
+                # Upload source to Gitbub release
+                ./ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME -recreate -prerelease $CONTAINER_TAG source.tar.gz
+
             fi
 
       #master with version in commit, ex: "Push release [vX.Y.Z]"
@@ -152,6 +176,19 @@ jobs:
                 #Push to quay.io prod repo
                 docker push $QUAY_PROD_REPO:$CONTAINER_TAG
 
+                #Create github release
                 #Create github pre-release
+                # Instal `ghr`
+                # TODO: Add ghr to primary container
+                #apt-get update -q && apt-get install -qy unzip
+                wget https://github.com/tcnksm/ghr/releases/download/v0.5.3/ghr_v0.5.3_linux_amd64.zip
+                unzip ghr_v0.5.3_linux_amd64.zip
+
+                #Create source archive
+                tar --exclude=source.tar.gz --exclude ghr -czvf source.tar.gz *
+
+                # Upload source to Gitbub release
+                ./ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME -recreate $CONTAINER_TAG source.tar.gz
+
             fi
 
