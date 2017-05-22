@@ -13,9 +13,120 @@ jobs:
       - run:
           name: Build the image
           command: |
-                  docker build -t example:$CIRCLE_BRANCH .
+            docker build -t $CIRCLE_PROJECT_REPONAME:$CIRCLE_BRANCH .
+            
+            #Get version label from container
+            export CONTAINER_VERSION=$(docker inspect -f {{.Config.Labels.version}} $CIRCLE_PROJECT_REPONAME:$CIRCLE_BRANCH)
+            
+            echo $CONTAINER_VERSION
+
+            #Save container version
+            echo "export CONTAINER_VERSION=${CONTAINER_VERSION}" >> env_vars
+
+            #Check if version already has a release, fails if found
+            curl https://api.github.com/repos/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/releases/tags/$CONTAINER_VERSION | grep "Not Found"
+            
+            #On master, verify container version label matches commit msg version
+            #TODO: Workaround until circle v2 supports tag build trigger
+            #https://discuss.circleci.com/t/build-on-tag/9864/16
+            if [ "${CIRCLE_BRANCH}" == "master" ];
+            then 
+                COMMIT_VERSION=$(git log -1 --pretty=%B | grep "\[v.*\]" | cut -d "[" -f2 | cut -d "]" -f1)
+                echo $COMMIT_VERSION
+
+                if [ "${CONTAINER_VERSION}" != "${COMMIT_VERSION}" ];
+                then
+                    echo "Versions don't match"
+                    exit 1
+                fi 
+
+                #Save commit version
+                echo "export COMMIT_VERSION=${COMMIT_VERSION}" >> env_vars
+            fi
 
       - run:
           name: Run tests
           command: |
-                  docker run -it example:$CIRCLE_BRANCH 
+            docker run -it $CIRCLE_PROJECT_REPONAME:$CIRCLE_BRANCH | tee output
+
+      - run: 
+          name: Verify tests output
+          command: |
+            grep "day" output
+
+      #branch commit & develop PRs
+      - deploy:
+          name: Push branch tagged image to development repo
+          command: |
+            if [ "${CIRCLE_BRANCH}" != "master" ] && [ "${CIRCLE_BRANCH}" != "develop" ];
+            then 
+                echo "Push image to develop repository";
+
+                #Tag image with test repo
+                docker tag $CIRCLE_PROJECT_REPONAME:$CIRCLE_BRANCH $QUAY_TEST_REPO:$CIRCLE_BRANCH
+
+                #Login to quay.io
+                docker login -u=$QUAY_USERNAME -p=$QUAY_PASSWORD quay.io
+                
+                #Push to quay.io develop repo
+                docker push $QUAY_TEST_REPO:$CIRCLE_BRANCH
+ 
+            fi
+
+      #develop commit & master PR
+      - deploy:
+          name: Push alpha release to development repo
+          command: |
+
+            #Recover env_vars
+            source env_vars
+            echo "${CONTAINER_VERSION}"
+
+            if [ "${CIRCLE_BRANCH}" == "develop" ] && [ -n "${CONTAINER_VERSION}" ];
+            then 
+                echo "Push alpha image to develop repository & Create github pre-release";
+
+                #Tag image with test repo & alpha build ver
+                CONTAINER_TAG="${CONTAINER_VERSION}-alpha.${CIRCLE_BUILD_NUM}"
+                docker tag $CIRCLE_PROJECT_REPONAME:$CIRCLE_BRANCH $QUAY_TEST_REPO:$CONTAINER_TAG
+
+                #Login to quay.io 
+                docker login -u=$QUAY_USERNAME -p=$QUAY_PASSWORD quay.io
+                
+                #Push to quay.io develop repo
+                docker push $QUAY_TEST_REPO:$CONTAINER_TAG
+
+                #Create github pre-release
+
+            fi
+
+      #master commit
+      - deploy:
+          name: Push beta release to development repo
+          command: |
+            
+            #Recover env_vars
+            source env_vars
+            echo "${CONTAINER_VERSION}"
+            echo "${COMMIT_VERSION}"
+
+            if [ "${CIRCLE_BRANCH}" == "master" ] && [ -z "${COMMIT_VERSION}" ];
+            then 
+                echo "Push beta image to develop repository & Create github pre-release";
+            fi
+
+      #master with version in commit, ex: "Push release [vX.Y.Z]"
+      - deploy:
+          name: Push release to production repo
+          command: |
+            
+            #Recover env_vars
+            source env_vars
+            echo "${CONTAINER_VERSION}"
+            echo "${COMMIT_VERSION}"
+
+            if [ "${CIRCLE_BRANCH}" == "master" ] && [ -n "${COMMIT_VERSION}" ];
+            then 
+                echo "Push released version to develop repository & Create github release";
+            fi
+
