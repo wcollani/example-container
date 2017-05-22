@@ -48,7 +48,7 @@ jobs:
           command: |
             grep "day" output
 
-      # Deploy development
+      #branch commit & develop PRs
       - deploy:
           name: Push branch tagged image to development repo
           command: |
