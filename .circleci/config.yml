@@ -16,6 +16,8 @@ jobs:
             set -o xtrace
             docker build -t "${CIRCLE_PROJECT_REPONAME}:${CIRCLE_BRANCH}.${CIRCLE_BUILD_NUM}" .
             
+            mkdir temp
+
             #On master or develop
             #Get version label and verify proper semver, fail if not
             #check if version already has a release, fails if found
@@ -32,7 +34,6 @@ jobs:
                 [[ ${CONTAINER_VERSION} =~ ${SEMVER_REGEX} ]]
 
                 #Save container version
-                mkdir temp
                 echo "export CONTAINER_VERSION=${CONTAINER_VERSION}" >> temp/env_vars
 
                 #Verify version doesn't exist
