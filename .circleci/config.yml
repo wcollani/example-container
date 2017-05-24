@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: technekes/circleci
+      - image: wcollani/circleci-2-executor
 
     working_directory: /tmp/app
 
@@ -12,7 +12,6 @@ jobs:
 
       - run:
           name: Build the image
-          shell: /bin/bash
           command: |
             set -o xtrace
             docker build -t "${CIRCLE_PROJECT_REPONAME}:${CIRCLE_BRANCH}.${CIRCLE_BUILD_NUM}" .
