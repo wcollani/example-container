@@ -17,6 +17,7 @@ jobs:
             docker build -t "${CIRCLE_PROJECT_REPONAME}:${CIRCLE_BRANCH}.${CIRCLE_BUILD_NUM}" .
             
             mkdir temp
+            touch temp/env_vars
 
             #On master or develop
             #Get version label and verify proper semver, fail if not
