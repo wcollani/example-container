@@ -94,7 +94,7 @@ jobs:
                 docker push $QUAY_TEST_REPO:$CONTAINER_TAG
 
                 #Create source archive
-                tar --exclude=ghr_v0.5.3_linux_amd64.zip --exclude=source.tar.gz --exclude ghr --exclude temp/* -czvf source.tar.gz *
+                tar --exclude=source.tar.gz --exclude temp/* -czvf source.tar.gz *
 
                 # Upload source and create Gitbub release
                 ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME -c $CIRCLE_SHA1 -replace -prerelease $CONTAINER_TAG source.tar.gz
@@ -122,7 +122,7 @@ jobs:
                 docker login -u=$QUAY_USERNAME -p=$QUAY_PASSWORD quay.io
 
                 #Create source archive
-                tar --exclude=ghr_v0.5.3_linux_amd64.zip --exclude=source.tar.gz --exclude ghr --exclude temp/* -czvf source.tar.gz *
+                tar --exclude=source.tar.gz --exclude temp/* -czvf source.tar.gz *
 
                 # Upload source and create Gitbub release
                 ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME -c $CIRCLE_SHA1 -replace -prerelease $CONTAINER_TAG source.tar.gz
