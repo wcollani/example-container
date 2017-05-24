@@ -20,7 +20,7 @@ jobs:
             #Get version label and verify proper semver, fail if not
             #check if version already has a release, fails if found
             #Save container version for deploy steps
-            if [ "${CIRCLE_BRANCH}" != "master" ] || [ "${CIRCLE_BRANCH}" != "develop" ];
+            if [ "${CIRCLE_BRANCH}" == "master" ] || [ "${CIRCLE_BRANCH}" == "develop" ];
             then 
                 SEMVER_REGEX='^v[0-9]*\.[0-9]*\.[0-9]*(-((alpha)|(beta))(\.([0-9])+)?)?$'
                 
@@ -91,17 +91,11 @@ jobs:
                 #Push to quay.io develop repo
                 docker push $QUAY_TEST_REPO:$CONTAINER_TAG
 
-                #Create github pre-release
-                # Instal `ghr`
-                # TODO: Add ghr to primary container
-                wget https://github.com/tcnksm/ghr/releases/download/v0.5.3/ghr_v0.5.3_linux_amd64.zip
-                unzip ghr_v0.5.3_linux_amd64.zip
-
                 #Create source archive
                 tar --exclude=ghr_v0.5.3_linux_amd64.zip --exclude=source.tar.gz --exclude ghr --exclude temp/* -czvf source.tar.gz *
 
-                # Upload source to Gitbub release
-                ./ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME -c $CIRCLE_SHA1 -replace -prerelease $CONTAINER_TAG source.tar.gz
+                # Upload source and create Gitbub release
+                ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME -c $CIRCLE_SHA1 -replace -prerelease $CONTAINER_TAG source.tar.gz
 
             fi
 
@@ -125,16 +119,11 @@ jobs:
                 #Login to quay.io
                 docker login -u=$QUAY_USERNAME -p=$QUAY_PASSWORD quay.io
 
-                # Instal `ghr`
-                # TODO: Add ghr to primary container
-                wget https://github.com/tcnksm/ghr/releases/download/v0.5.3/ghr_v0.5.3_linux_amd64.zip
-                unzip ghr_v0.5.3_linux_amd64.zip
-
                 #Create source archive
                 tar --exclude=ghr_v0.5.3_linux_amd64.zip --exclude=source.tar.gz --exclude ghr --exclude temp/* -czvf source.tar.gz *
 
-                # Upload source to Gitbub release
-                ./ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME -c $CIRCLE_SHA1 -replace -prerelease $CONTAINER_TAG source.tar.gz
+                # Upload source and create Gitbub release
+                ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME -c $CIRCLE_SHA1 -replace -prerelease $CONTAINER_TAG source.tar.gz
 
                 #Based on CONTAINER_VERSION create {pre-}release and push to corresponding repo
 
