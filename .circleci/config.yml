@@ -14,10 +14,10 @@ jobs:
           name: Build the image
           command: |
             set -o xtrace
-            docker build -t $CIRCLE_PROJECT_REPONAME:$CIRCLE_BRANCH .
+            docker build -t "${CIRCLE_PROJECT_REPONAME}:${CIRCLE_BRANCH}.${CIRCLE_BUILD_NUM}" .
             
             #Get version label from container
-            CONTAINER_VERSION=$(docker inspect -f {{.Config.Labels.version}} $CIRCLE_PROJECT_REPONAME:$CIRCLE_BRANCH)
+            CONTAINER_VERSION=$(docker inspect -f {{.Config.Labels.version}} "${CIRCLE_PROJECT_REPONAME}:${CIRCLE_BRANCH}.${CIRCLE_BUILD_NUM}")
             
             echo $CONTAINER_VERSION
 
@@ -25,31 +25,16 @@ jobs:
             mkdir temp
             echo "export CONTAINER_VERSION=${CONTAINER_VERSION}" >> temp/env_vars
 
-            #Check if version already has a release, fails if found
-            curl -s https://api.github.com/repos/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/releases/tags/$CONTAINER_VERSION | grep "Not Found"
-            
-            #On master if msg contains version, verify container version label matches commit msg version
-            #TODO: Workaround until circle v2 supports tag build trigger
-            #https://discuss.circleci.com/t/build-on-tag/9864/16
-            if [ "${CIRCLE_BRANCH}" == "master" ];
+            #On master or develop, check if version already has a release. fails if found
+            if [ "${CIRCLE_BRANCH}" == "master" ] || [ "${CIRCLE_BRANCH}" == "develop" ];
             then 
-                COMMIT_VERSION=$(git log -1 --pretty=%B | grep "\[v.*\]" | cut -d "[" -f2 | cut -d "]" -f1) || true
-                echo $COMMIT_VERSION
-
-                if [ "${CONTAINER_VERSION}" != "${COMMIT_VERSION}" ] && [ -n "${COMMIT_VERSION}" ] ;
-                then
-                    echo "Versions don't match"
-                    exit 1
-                fi 
-
-                #Save commit version
-                echo "export COMMIT_VERSION=${COMMIT_VERSION}" >> temp/env_vars
+                curl -s https://api.github.com/repos/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/releases/tags/$CONTAINER_VERSION | grep "Not Found"
             fi
-
+            
       - run:
           name: Run tests
           command: |
-            docker run -it $CIRCLE_PROJECT_REPONAME:$CIRCLE_BRANCH | tee temp/output
+            docker run -it "${CIRCLE_PROJECT_REPONAME}:${CIRCLE_BRANCH}.${CIRCLE_BUILD_NUM}" | tee temp/output
 
       - run: 
           name: Verify tests output
@@ -65,13 +50,13 @@ jobs:
                 echo "Push image to develop repository";
 
                 #Tag image with test repo
-                docker tag $CIRCLE_PROJECT_REPONAME:$CIRCLE_BRANCH $QUAY_TEST_REPO:$CIRCLE_BRANCH
+                docker tag "${CIRCLE_PROJECT_REPONAME}:${CIRCLE_BRANCH}.${CIRCLE_BUILD_NUM}" "${QUAY_TEST_REPO}:${CIRCLE_BRANCH}.${CIRCLE_BUILD_NUM}"
 
                 #Login to quay.io
                 docker login -u=$QUAY_USERNAME -p=$QUAY_PASSWORD quay.io
                 
                 #Push to quay.io develop repo
-                docker push $QUAY_TEST_REPO:$CIRCLE_BRANCH
+                docker push "${QUAY_TEST_REPO}:${CIRCLE_BRANCH}.${CIRCLE_BUILD_NUM}"
  
             fi
 
