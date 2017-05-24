@@ -25,7 +25,8 @@ jobs:
             mkdir temp
             echo "export CONTAINER_VERSION=${CONTAINER_VERSION}" >> temp/env_vars
 
-            #On master or develop, check if version already has a release. fails if found
+            #On master or develop, check if version already has a release. 
+            #fails if found
             if [ "${CIRCLE_BRANCH}" == "master" ] || [ "${CIRCLE_BRANCH}" == "develop" ];
             then 
                 curl -s https://api.github.com/repos/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/releases/tags/$CONTAINER_VERSION | grep "Not Found"
@@ -62,7 +63,7 @@ jobs:
 
       #develop commit
       - deploy:
-          name: Push alpha release to development repo
+          name: Push develop release to development repo
           command: |
 
             #Recover env_vars
@@ -71,10 +72,10 @@ jobs:
 
             if [ "${CIRCLE_BRANCH}" == "develop" ] && [ -n "${CONTAINER_VERSION}" ];
             then 
-                echo "Push alpha image to develop repository & Create github pre-release";
+                echo "Push $version-develop to develop repository & Create github pre-release";
 
-                #Tag image with test repo & alpha build ver
-                CONTAINER_TAG="${CONTAINER_VERSION}-alpha.${CIRCLE_BUILD_NUM}"
+                #Tag image with test repo & develop build ver
+                CONTAINER_TAG="${CONTAINER_VERSION}-develop.${CIRCLE_BUILD_NUM}"
                 docker tag $CIRCLE_PROJECT_REPONAME:$CIRCLE_BRANCH $QUAY_TEST_REPO:$CONTAINER_TAG
 
                 #Login to quay.io 
@@ -99,29 +100,24 @@ jobs:
 
       #master commit
       - deploy:
-          name: Push beta release to development repo
+          name: Push alpha,beta or production release
           command: |
             
             #Recover env_vars
             source temp/env_vars
             echo "${CONTAINER_VERSION}"
-            echo "${COMMIT_VERSION}"
 
-            if [ "${CIRCLE_BRANCH}" == "master" ] && [ -z "${COMMIT_VERSION}" ];
+            if [ "${CIRCLE_BRANCH}" == "master" ] && [ -n "${CONTAINER_VERSION}" ];
             then 
                 echo "Push beta image to develop repository & Create github pre-release";
 
                 #Tag image with test repo & beta build ver
-                CONTAINER_TAG="${CONTAINER_VERSION}-beta.${CIRCLE_BUILD_NUM}"
+                CONTAINER_TAG="${CONTAINER_VERSION}"
                 docker tag $CIRCLE_PROJECT_REPONAME:$CIRCLE_BRANCH $QUAY_TEST_REPO:$CONTAINER_TAG
 
                 #Login to quay.io
                 docker login -u=$QUAY_USERNAME -p=$QUAY_PASSWORD quay.io
 
-                #Push to quay.io develop repo
-                docker push $QUAY_TEST_REPO:$CONTAINER_TAG
-
-                #Create github pre-release
                 # Instal `ghr`
                 # TODO: Add ghr to primary container
                 wget https://github.com/tcnksm/ghr/releases/download/v0.5.3/ghr_v0.5.3_linux_amd64.zip
@@ -133,43 +129,7 @@ jobs:
                 # Upload source to Gitbub release
                 ./ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME -c $CIRCLE_SHA1 -replace -prerelease $CONTAINER_TAG source.tar.gz
 
-            fi
+                #Based on CONTAINER_VERSION create {pre-}release and push to corresponding repo
 
-      #master with version in commit, ex: "Push release [vX.Y.Z]"
-      - deploy:
-          name: Push release to production repo
-          command: |
-            
-            #Recover env_vars
-            source temp/env_vars
-            echo "${CONTAINER_VERSION}"
-            echo "${COMMIT_VERSION}"
-
-            if [ "${CIRCLE_BRANCH}" == "master" ] && [ -n "${COMMIT_VERSION}" ];
-            then 
-                echo "Push released version to develop repository & Create github release";
-
-                #Tag image with test repo & deployed version
-                CONTAINER_TAG="${CONTAINER_VERSION}"
-                docker tag $CIRCLE_PROJECT_REPONAME:$CIRCLE_BRANCH $QUAY_PROD_REPO:$CONTAINER_TAG
-
-                #Login to quay.io
-                docker login -u=$QUAY_USERNAME -p=$QUAY_PASSWORD quay.io
-
-                #Push to quay.io prod repo
-                docker push $QUAY_PROD_REPO:$CONTAINER_TAG
-
-                #Create github release
-                # Instal `ghr`
-                # TODO: Add ghr to primary container
-                wget https://github.com/tcnksm/ghr/releases/download/v0.5.3/ghr_v0.5.3_linux_amd64.zip
-                unzip ghr_v0.5.3_linux_amd64.zip
-
-                #Create source archive
-                tar --exclude=ghr_v0.5.3_linux_amd64.zip --exclude=source.tar.gz --exclude ghr --exclude temp/* -czvf source.tar.gz *
-
-                # Upload source to Gitbub release
-                ./ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME -c $CIRCLE_SHA1 -replace $CONTAINER_TAG source.tar.gz
 
             fi
-
