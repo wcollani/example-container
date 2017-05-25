@@ -105,7 +105,8 @@ jobs:
       - deploy:
           name: Push alpha,beta or production release
           command: |
-            
+            set -o xtrace
+ 
             #Recover env_vars
             source temp/env_vars
             echo "${CONTAINER_VERSION}"
