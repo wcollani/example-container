@@ -120,7 +120,7 @@ jobs:
                 tar --exclude=source.tar.gz --exclude temp/* -czvf source.tar.gz *
 
                 #Based on CONTAINER_VERSION create {pre-}release and push to corresponding repo
-                if [ "${CONTAINER_VERSION}" =~ "((alpha)|(beta))" ];
+                if [[ ${CONTAINER_VERSION} =~ '((alpha)|(beta))' ]];
                 then
                     #Tag image with test repo & version
                     docker tag "${CIRCLE_PROJECT_REPONAME}:${CIRCLE_BRANCH}.${CIRCLE_BUILD_NUM}" $QUAY_TEST_REPO:$CONTAINER_VERSION
@@ -138,7 +138,7 @@ jobs:
                     docker push $QUAY_PROD_REPO:$CONTAINER_VERSION
 
                     #Upload source and create Gitbub release
-                    ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME -c $CIRCLE_SHA1 -replace -release $CONTAINER_VERSION source.tar.gz
+                    ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME -c $CIRCLE_SHA1 -replace $CONTAINER_VERSION source.tar.gz
                 fi 
 
             fi
