@@ -85,7 +85,7 @@ jobs:
 
                 #Tag image with test repo & develop build ver
                 CONTAINER_TAG="${CONTAINER_VERSION}-develop.${CIRCLE_BUILD_NUM}"
-                docker tag $CIRCLE_PROJECT_REPONAME:$CIRCLE_BRANCH $QUAY_TEST_REPO:$CONTAINER_TAG
+                docker tag "${CIRCLE_PROJECT_REPONAME}:${CIRCLE_BRANCH}.${CIRCLE_BUILD_NUM}" "${QUAY_TEST_REPO}:${CONTAINER_TAG}"
 
                 #Login to quay.io 
                 docker login -u=$QUAY_USERNAME -p=$QUAY_PASSWORD quay.io
@@ -96,7 +96,7 @@ jobs:
                 #Create source archive
                 tar --exclude=source.tar.gz --exclude temp/* -czvf source.tar.gz *
 
-                # Upload source and create Gitbub release
+                #Upload source and create Gitbub release
                 ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME -c $CIRCLE_SHA1 -replace -prerelease $CONTAINER_TAG source.tar.gz
 
             fi
@@ -112,11 +112,7 @@ jobs:
 
             if [ "${CIRCLE_BRANCH}" == "master" ] && [ -n "${CONTAINER_VERSION}" ];
             then 
-                echo "Push beta image to develop repository & Create github pre-release";
-
-                #Tag image with test repo & beta build ver
                 CONTAINER_TAG="${CONTAINER_VERSION}"
-                docker tag $CIRCLE_PROJECT_REPONAME:$CIRCLE_BRANCH $QUAY_TEST_REPO:$CONTAINER_TAG
 
                 #Login to quay.io
                 docker login -u=$QUAY_USERNAME -p=$QUAY_PASSWORD quay.io
@@ -124,10 +120,26 @@ jobs:
                 #Create source archive
                 tar --exclude=source.tar.gz --exclude temp/* -czvf source.tar.gz *
 
-                # Upload source and create Gitbub release
-                ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME -c $CIRCLE_SHA1 -replace -prerelease $CONTAINER_TAG source.tar.gz
-
                 #Based on CONTAINER_VERSION create {pre-}release and push to corresponding repo
+                if [ "${CONTAINER_VERSION}" =~ "((alpha)|(beta))" ];
+                then
+                    #Tag image with test repo & version
+                    docker tag "${CIRCLE_PROJECT_REPONAME}:${CIRCLE_BRANCH}.${CIRCLE_BUILD_NUM}" $QUAY_TEST_REPO:$CONTAINER_VERSION
+                    
+                    #Push alpha and beta releases to test repo
+                    docker push $QUAY_TEST_REPO:$CONTAINER_VERSION
 
+                    #Upload source and create Gitbub pre-release
+                    ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME -c $CIRCLE_SHA1 -replace -prerelease $CONTAINER_TAG source.tar.gz
+                else
+                    #Tag image with prod repo & version
+                    docker tag "${CIRCLE_PROJECT_REPONAME}:${CIRCLE_BRANCH}.${CIRCLE_BUILD_NUM}" $QUAY_PROD_REPO:$CONTAINER_VERSION
+                    
+                    #Push production release to production repo
+                    docker push $QUAY_PROD_REPO:$CONTAINER_VERSION
+
+                    #Upload source and create Gitbub release
+                    ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME -c $CIRCLE_SHA1 -replace -prerelease $CONTAINER_TAG source.tar.gz
+                fi 
 
             fi
