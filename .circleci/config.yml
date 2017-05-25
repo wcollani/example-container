@@ -105,15 +105,14 @@ jobs:
       - deploy:
           name: Push alpha,beta or production release
           command: |
-            
+            set -o xtrace
+ 
             #Recover env_vars
             source temp/env_vars
             echo "${CONTAINER_VERSION}"
 
             if [ "${CIRCLE_BRANCH}" == "master" ] && [ -n "${CONTAINER_VERSION}" ];
             then 
-                CONTAINER_TAG="${CONTAINER_VERSION}"
-
                 #Login to quay.io
                 docker login -u=$QUAY_USERNAME -p=$QUAY_PASSWORD quay.io
 
@@ -130,7 +129,7 @@ jobs:
                     docker push $QUAY_TEST_REPO:$CONTAINER_VERSION
 
                     #Upload source and create Gitbub pre-release
-                    ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME -c $CIRCLE_SHA1 -replace -prerelease $CONTAINER_TAG source.tar.gz
+                    ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME -c $CIRCLE_SHA1 -replace -prerelease $CONTAINER_VERSION source.tar.gz
                 else
                     #Tag image with prod repo & version
                     docker tag "${CIRCLE_PROJECT_REPONAME}:${CIRCLE_BRANCH}.${CIRCLE_BUILD_NUM}" $QUAY_PROD_REPO:$CONTAINER_VERSION
@@ -139,7 +138,7 @@ jobs:
                     docker push $QUAY_PROD_REPO:$CONTAINER_VERSION
 
                     #Upload source and create Gitbub release
-                    ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME -c $CIRCLE_SHA1 -replace -prerelease $CONTAINER_TAG source.tar.gz
+                    ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME -c $CIRCLE_SHA1 -replace -release $CONTAINER_VERSION source.tar.gz
                 fi 
 
             fi
